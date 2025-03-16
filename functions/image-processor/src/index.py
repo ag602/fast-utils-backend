@@ -229,19 +229,24 @@ def main(req, res):
         
         # Get the operation type from the URL path or query parameters
         path = req.variables.get('APPWRITE_FUNCTION_PATH', '')
+        query = req.variables.get('APPWRITE_FUNCTION_QUERY', '')
         operation = None
         
-        # Try to get operation from path
-        if path:
+        # Try to get operation from query parameters
+        if query:
+            query_params = {}
+            for param in query.split('&'):
+                if '=' in param:
+                    key, value = param.split('=', 1)
+                    query_params[key] = value
+            
+            operation = query_params.get('operation')
+        
+        # Try to get operation from path if not found in query
+        if not operation and path:
             parts = path.split('/')
             if parts and parts[-1] in ['remove-background', 'upscale', 'compress', 'edit']:
                 operation = parts[-1]
-        
-        # If not found in path, check query parameters
-        if not operation:
-            query = req.variables.get('APPWRITE_FUNCTION_QUERY', '')
-            if 'operation=' in query:
-                operation = query.split('operation=')[1].split('&')[0]
         
         # Default to edit if no operation specified
         if not operation:
